@@ -38,10 +38,7 @@ const cartSum = document.querySelector('.cart-sum');
 
 const countCartSum = () => {
   let totalSum = 0;
-  cart.forEach((elem) =>{
-    const {id, name, price, amount} = elem;
-    return totalSum += price * amount;
-  })
+  cart.forEach(({price, amount}) => totalSum += price * amount )
   return totalSum;
 }
 
