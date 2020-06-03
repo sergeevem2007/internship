@@ -32,47 +32,79 @@ const storage = [
   ];
 const cart = [];
 
+let sum = 0;
+
 webix.ui({
     cols:[
-        {
+        { 
             rows: [
-                { view:"template", type:"header", template:"Склад" },
-                { view:"datatable", autoConfig:true, data:[ ...storage ] }
+                { view:"template", id:"storageHeader", type:"header", template:"Склад" },
+                { view:"datatable", height: 300, id:"storage", autoConfig:true, data:[ ...storage ], }
             ]
         },
         {
             rows: [
-                { view:"template", type:"header", template:"Корзина" },
-                { view:"datatable", autoConfig:true, data:[ ...cart ] },
+                { view:"template", id:"cartHeader", type:"header", template:"Корзина" },
+                { view:"datatable", height: 300, id:"cart", autoConfig:true, data:[ ...cart ] },
+                { view:"template", id:"cartFooter", type:"header", template: "Сумма 0" }
             ]
         }
     ]
 });
 
-window.addEventListener('click', (event)=>{
-    const target = event.target;
+const storageItem = $$("storage");
+const cartItem = $$("cart");
+const cartFooter = $$("cartFooter");
 
-    let storageItem = storage.find((item)=>{
-      return item.name == target.textContent;
-    });
-    let cartItem = cart.find((item)=>{
-      return item.name == target.textContent;
-    });
-    if (target.closest('body')){
-        storageItem.amount--;
-        if (cartItem){
-          cartItem.amount++;
-        } else {
-          cartItem = {...storageItem};    
-          cart.push(cartItem);
-          cartItem = cart.find((item)=>{
-            return item.name == target.textContent;
-          });
-          cartItem.amount = 1;
-        }
-      } else if (target.closest('body')){
-        storageItem.amount++;
-        cartItem.amount--;
-      }
-    console.log(cart)
-})
+const countCartSum = (totalSum = 0) => {
+  totalSum = 0;
+  const cartArr = cartItem.data.pull;
+  for (let key in cartArr){
+    let {price, amount} = cartArr[key];
+    totalSum += price * amount
+  }
+  return totalSum;
+}
+
+storageItem.attachEvent("onItemClick", function(id, e, node){
+  const item = this.getItem(id);
+  item.amount--;
+  let findItem = cartItem.find(function(obj){
+    return obj.id == item.id;
+  });
+  if (findItem.length != 0) {
+    findItem[0].amount++;  
+  } else {
+    findItem = {...item};
+    cartItem.add(findItem);
+    findItem.amount = 1;
+  }
+  if (item.amount == 0) {
+    storageItem.remove(item.id);
+  }
+  storageItem.render();
+  cartItem.render();
+  cartFooter.setHTML(`Сумма ${countCartSum()}`);
+});
+
+cartItem.attachEvent("onItemClick", function(id, e, node){
+  const item = this.getItem(id);
+  item.amount--;
+  let findItem = storageItem.find(function(obj){
+    return obj.id == item.id;
+  });
+  if (findItem.length != 0) {
+    findItem[0].amount++;  
+  } else {
+    findItem = {...item};
+    storageItem.add(findItem);
+    findItem.amount = 1;
+    // cartItem.render();
+  }
+  if (item.amount == 0) {
+    cartItem.remove(item.id);
+  }
+  storageItem.render();
+  cartItem.render();
+  cartFooter.setHTML(`Сумма ${countCartSum()}`);
+});
