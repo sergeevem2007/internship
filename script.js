@@ -58,53 +58,58 @@ const cartFooter = $$("cartFooter");
 
 const countCartSum = (totalSum = 0) => {
   totalSum = 0;
-  const cartArr = cartItem.data.pull;
-  for (let key in cartArr){
-    let {price, amount} = cartArr[key];
-    totalSum += price * amount
-  }
+  cart.forEach(({price, amount}) => totalSum += price * amount )
   return totalSum;
 }
-
-storageItem.attachEvent("onItemClick", function(id, e, node){
+function changeAmount  (id, e, node) {
   const item = this.getItem(id);
-  item.amount--;
-  let findItem = cartItem.find(function(obj){
-    return obj.id == item.id;
-  });
-  if (findItem.length != 0) {
-    findItem[0].amount++;  
-  } else {
-    findItem = {...item};
-    cartItem.add(findItem);
-    findItem.amount = 1;
+  if (item) {
+    let storageElem = storage.find((elem)=>{
+      return elem.id == item.id;
+    });
+    let cartElem = cart.find((elem)=>{
+      return elem.id == item.id;
+    });
+    if (this.data.owner == "storage"){
+      storageElem.amount--;
+      if (storageElem.amount == 0){
+        storage.splice(storage.indexOf(storageElem), 1);
+      }
+      if (cartElem){
+        cartElem.amount++;
+      } else {  
+        cartElem = {...storageElem};    
+        cart.push(cartElem);
+        cartElem = cart.find((elem)=>{
+          return elem.id == item.id;
+        });
+        cartElem.amount = 1;
+      }    
+    } else if (this.data.owner == "cart"){
+      if (storageElem){
+        storageElem.amount++;
+        cartElem.amount--;
+      } else {
+        storageElem = {...cartElem};    
+        storage.push(storageElem);
+        storageElem = storage.find((elem)=>{
+          return elem.id == item.id;
+        });
+        storageElem.amount = 1;
+      }
+      
+      if (cartElem.amount == 0){
+        cart.splice(cart.indexOf(cartElem), 1);
+      }
+      
+    }
   }
-  if (item.amount == 0) {
-    storageItem.remove(item.id);
-  }
+  storageItem.define("data", storage);
+  cartItem.define("data", cart);
   storageItem.render();
   cartItem.render();
   cartFooter.setHTML(`Сумма ${countCartSum()}`);
-});
+}
 
-cartItem.attachEvent("onItemClick", function(id, e, node){
-  const item = this.getItem(id);
-  item.amount--;
-  let findItem = storageItem.find(function(obj){
-    return obj.id == item.id;
-  });
-  if (findItem.length != 0) {
-    findItem[0].amount++;  
-  } else {
-    findItem = {...item};
-    storageItem.add(findItem);
-    findItem.amount = 1;
-    // cartItem.render();
-  }
-  if (item.amount == 0) {
-    cartItem.remove(item.id);
-  }
-  storageItem.render();
-  cartItem.render();
-  cartFooter.setHTML(`Сумма ${countCartSum()}`);
-});
+storageItem.attachEvent("onItemClick", changeAmount);
+cartItem.attachEvent("onItemClick", changeAmount);
