@@ -32,8 +32,6 @@ const storage = [
   ];
 const cart = [];
 
-let sum = 0;
-
 webix.ui({
     cols:[
         { 
@@ -57,58 +55,62 @@ const cartItem = $$("cart");
 const cartFooter = $$("cartFooter");
 
 const countCartSum = (totalSum = 0) => {
-  totalSum = 0;
+  // обходим массив и подсчитываем сумму
   cart.forEach(({price, amount}) => totalSum += price * amount )
   return totalSum;
 }
 function changeAmount  (id, e, node) {
   const item = this.getItem(id);
   if (item) {
+    // создаем переменные которые ищут элемент в массиве, совпадающий с item
     let storageElem = storage.find((elem)=>{
       return elem.id == item.id;
     });
     let cartElem = cart.find((elem)=>{
       return elem.id == item.id;
     });
+    // если клик произошел по storage
     if (this.data.owner == "storage"){
       storageElem.amount--;
+      // если количество 0, удаляем элемент из массива
       if (storageElem.amount == 0){
         storage.splice(storage.indexOf(storageElem), 1);
       }
+      // если элемент в массиве существует, увеличиваем количество
       if (cartElem){
         cartElem.amount++;
-      } else {  
+      } else {
+        // иначе создаем копию элемента и задаем количество 1 
         cartElem = {...storageElem};    
         cart.push(cartElem);
-        cartElem = cart.find((elem)=>{
-          return elem.id == item.id;
-        });
         cartElem.amount = 1;
-      }    
+      }
+      // если клик произошел по cart    
     } else if (this.data.owner == "cart"){
+      // если элемент в массиве storage существует, увеличиваем количество в storage, уменьшаем в cart
       if (storageElem){
         storageElem.amount++;
         cartElem.amount--;
+        // если количество 0, удаляем элемент из массива
+        if (cartElem.amount == 0){
+          cart.splice(cart.indexOf(cartElem), 1);
+        }
+        // иначе создаем копию элемента и задаем количество 1
       } else {
         cartElem.amount--;
         storageElem = {...cartElem};    
         storage.push(storageElem);
-        storageElem = storage.find((elem)=>{
-          return elem.id == item.id;
-        });
         storageElem.amount = 1;
       }
-      
-      if (cartElem.amount == 0){
-        cart.splice(cart.indexOf(cartElem), 1);
-      }
-      
     }
   }
+  // очищаем все элементы компонента
   storageItem.clearAll();
   cartItem.clearAll();
+  // задаем компонентам новые параметры
   storageItem.define("data", storage);
   cartItem.define("data", cart);
+  // выводим сумму
   cartFooter.setHTML(`Сумма ${countCartSum()}`);
 }
 
