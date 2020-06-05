@@ -39,13 +39,13 @@ webix.ui({
         { 
             rows: [
                 { view:"template", id:"storageHeader", type:"header", template:"Склад" },
-                { view:"datatable", height: 300, id:"storage", autoConfig:true, data:[ ...storage ], }
+                { view:"datatable", height: 300, id:"storage", autoConfig:true, data: storage }
             ]
         },
         {
             rows: [
                 { view:"template", id:"cartHeader", type:"header", template:"Корзина" },
-                { view:"datatable", height: 300, id:"cart", autoConfig:true, data:[ ...cart ] },
+                { view:"datatable", height: 300, id:"cart", autoConfig:true, data: cart },
                 { view:"template", id:"cartFooter", type:"header", template: "Сумма 0" }
             ]
         }
@@ -90,6 +90,7 @@ function changeAmount  (id, e, node) {
         storageElem.amount++;
         cartElem.amount--;
       } else {
+        cartElem.amount--;
         storageElem = {...cartElem};    
         storage.push(storageElem);
         storageElem = storage.find((elem)=>{
@@ -104,10 +105,10 @@ function changeAmount  (id, e, node) {
       
     }
   }
+  storageItem.clearAll();
+  cartItem.clearAll();
   storageItem.define("data", storage);
   cartItem.define("data", cart);
-  storageItem.render();
-  cartItem.render();
   cartFooter.setHTML(`Сумма ${countCartSum()}`);
 }
 
