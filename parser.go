@@ -9,20 +9,15 @@ import (
 )
 
 func main() {
-	parseInput()
-	a := parseInput()
-	fmt.Println(a)
 	for _, elem := range parseInput() {
 		parsePage(elem)
 	}
-	// linkPage := "https://www.google.com/"
-	// parsePage(linkPage)
 }
 
+//открываем файл, читаем из файла и результат записываем в срез
 func parseInput() []string {
 	input, err := os.Open("input.txt")
 	defer input.Close()
-
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -35,12 +30,15 @@ func parseInput() []string {
 	return strings.Split(string(inputContent), "\r\n")
 }
 
+//отправляем запрос, из тела ответа читаем данные, создаем директорию, переходим в директорию,
+//создаем файл, запсисываем данные в файл, выходим из директории
 func parsePage(link string) {
 	page, err := http.Get("http://" + link)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	pageContent, err := ioutil.ReadAll(page.Body)
 	defer page.Body.Close()
 
@@ -49,24 +47,15 @@ func parsePage(link string) {
 		return
 	}
 
-	err = os.Mkdir(link, 1)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
+	os.Mkdir(link, 0700)
+	os.Chdir(link + "/")
 	file, err := os.Create(link + ".html")
+	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 		return
-	}
-
-	defer file.Close()
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
 	}
 	file.Write(pageContent)
+	os.Chdir("../")
 	return
 }
