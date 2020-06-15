@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -8,24 +9,20 @@ import (
 	"strings"
 )
 
-var inputPath, resultPath string
-
 func main() {
-
-	fmt.Println(`Введите путь к файлу с адресами в формате "path/" `)
-	fmt.Scan(&inputPath)
-	fmt.Println(`Введите путь к папке результатов "path/" `)
-	fmt.Scan(&resultPath)
-	os.Mkdir(resultPath, 0700)
-	for _, elem := range parseInput() {
-		parsePage(elem)
+	inputPath := flag.String("input", "input/input.txt", "path to input file")
+	resultPath := flag.String("result", "result/", "path to result")
+	flag.Parse()
+	os.Mkdir(*resultPath, 0700)
+	for _, elem := range parseInput(*inputPath) {
+		parsePage(elem, *resultPath)
 	}
 }
 
 //открываем файл, читаем из файла и результат записываем в срез
-func parseInput() []string {
-	os.Chdir(inputPath)
-	input, err := os.Open("input.txt")
+func parseInput(path string) []string {
+	// os.Chdir(path)
+	input, err := os.Open(path)
 	defer input.Close()
 	if err != nil {
 		fmt.Println(err)
@@ -41,7 +38,7 @@ func parseInput() []string {
 
 //отправляем запрос, из тела ответа читаем данные, создаем директорию, переходим в директорию,
 //создаем файл, запсисываем данные в файл, выходим из директории
-func parsePage(link string) {
+func parsePage(link, path string) {
 	page, err := http.Get("http://" + link)
 	if err != nil {
 		fmt.Println(err)
@@ -56,7 +53,7 @@ func parsePage(link string) {
 		return
 	}
 
-	os.Chdir("../" + resultPath)
+	os.Chdir(path)
 	os.Mkdir(link, 0700)
 	os.Chdir(link + "/")
 	file, err := os.Create(link + ".html")
