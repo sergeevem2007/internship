@@ -8,7 +8,15 @@ import (
 	"strings"
 )
 
+var inputPath, resultPath string
+
 func main() {
+
+	fmt.Println(`Введите путь к файлу с адресами в формате "path/" `)
+	fmt.Scan(&inputPath)
+	fmt.Println(`Введите путь к папке результатов "path/" `)
+	fmt.Scan(&resultPath)
+	os.Mkdir(resultPath, 0700)
 	for _, elem := range parseInput() {
 		parsePage(elem)
 	}
@@ -16,6 +24,7 @@ func main() {
 
 //открываем файл, читаем из файла и результат записываем в срез
 func parseInput() []string {
+	os.Chdir(inputPath)
 	input, err := os.Open("input.txt")
 	defer input.Close()
 	if err != nil {
@@ -47,6 +56,7 @@ func parsePage(link string) {
 		return
 	}
 
+	os.Chdir("../" + resultPath)
 	os.Mkdir(link, 0700)
 	os.Chdir(link + "/")
 	file, err := os.Create(link + ".html")
