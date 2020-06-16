@@ -6,22 +6,22 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 )
 
 func main() {
 	inputPath := flag.String("input", "input/input.txt", "path to input file")
-	resultPath := flag.String("result", "result/", "path to result")
+	resultPath := flag.String("result", "result", "path to result")
 	flag.Parse()
 	os.Mkdir(*resultPath, 0700)
-	for _, elem := range parseInput(*inputPath) {
-		parsePage(elem, *resultPath)
+	for _, link := range parseInput(*inputPath) {
+		parsePage(link, *resultPath)
 	}
 }
 
 //открываем файл, читаем из файла и результат записываем в срез
 func parseInput(path string) []string {
-	// os.Chdir(path)
 	input, err := os.Open(path)
 	defer input.Close()
 	if err != nil {
@@ -39,7 +39,8 @@ func parseInput(path string) []string {
 //отправляем запрос, из тела ответа читаем данные, создаем директорию, переходим в директорию,
 //создаем файл, запсисываем данные в файл, выходим из директории
 func parsePage(link, path string) {
-	page, err := http.Get("http://" + link)
+
+	page, err := http.Get(link)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -52,6 +53,9 @@ func parsePage(link, path string) {
 		fmt.Println(err)
 		return
 	}
+
+	link = regexp.MustCompile(`([a-z]*)://`).ReplaceAllString(link, "")
+	link = regexp.MustCompile(`[\/?:"<>|+*]`).ReplaceAllString(link, "")
 
 	os.Chdir(path)
 	os.Mkdir(link, 0700)
