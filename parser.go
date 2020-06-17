@@ -28,11 +28,11 @@ func main() {
 //открываем файл, читаем из файла и результат записываем в срез
 func parseInput(path string) []string {
 	input, err := os.Open(path)
-	defer input.Close()
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
+	defer input.Close()
 
 	inputContent, err := ioutil.ReadAll(input)
 	if err != nil {
@@ -82,11 +82,11 @@ func parsePage(link, path string) {
 	}
 
 	file, err := os.Create(link + ".html")
-	defer file.Close()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	defer file.Close()
 
 	_, err = file.Write(pageContent)
 	if err != nil {
