@@ -8,9 +8,11 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 func main() {
+	start := time.Now()
 	inputPath := flag.String("input", "input/input.txt", "path to input file")
 	resultPath := flag.String("result", "result", "path to result")
 	flag.Parse()
@@ -23,6 +25,9 @@ func main() {
 	for _, link := range parseInput(*inputPath) {
 		parsePage(link, *resultPath)
 	}
+	end := time.Now()
+	programTime := end.Sub(start)
+	fmt.Printf("programTime = %v\n", programTime)
 }
 
 //открываем файл, читаем из файла и результат записываем в срез
