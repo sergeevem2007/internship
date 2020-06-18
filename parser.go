@@ -8,11 +8,14 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
 func main() {
+
 	start := time.Now()
+	var wg sync.WaitGroup
 	inputPath := flag.String("input", "input/input.txt", "path to input file")
 	resultPath := flag.String("result", "result", "path to result")
 	flag.Parse()
@@ -23,11 +26,16 @@ func main() {
 	}
 
 	for _, link := range parseInput(*inputPath) {
-		parsePage(link, *resultPath)
+		wg.Add(1)
+		go parsePage(link, *resultPath, &wg)
+
 	}
+	wg.Wait()
+
 	end := time.Now()
 	programTime := end.Sub(start)
 	fmt.Printf("programTime = %v\n", programTime)
+
 }
 
 //открываем файл, читаем из файла и результат записываем в срез
@@ -50,8 +58,8 @@ func parseInput(path string) []string {
 
 //отправляем запрос, из тела ответа читаем данные, создаем директорию, переходим в директорию,
 //создаем файл, запсисываем данные в файл, выходим из директории
-func parsePage(link, path string) {
-
+func parsePage(link, path string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	page, err := http.Get(link)
 	if err != nil {
 		fmt.Println(err)
@@ -70,7 +78,7 @@ func parsePage(link, path string) {
 
 	err = os.Chdir(path)
 	if err != nil {
-		fmt.Println(err, "1")
+		fmt.Println(err)
 		return
 	}
 
